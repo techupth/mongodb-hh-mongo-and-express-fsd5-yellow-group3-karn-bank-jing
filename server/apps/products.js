@@ -5,16 +5,36 @@ import { db } from "../utils/db.js";
 const productRouter = Router();
 
 productRouter.get("/", async(req, res) => {
+  const name = req.query.name;
+  const category = req.query.category;
+
+  const query = {};
+
+  if (name) {
+    query.name = new RegExp(name, "i");
+  }
+
+  if (category) {
+    query.category = category;
+  }
+
   const collection = db.collection("products")
 
-  const products = await collection
-    .find({})
+  try {
+    const products = await collection
+    .find(query)
+    .sort({created_at : -1})
     .limit(10)
     .toArray();
 
     return res.json({
       data : products
     })
+  } catch {
+    return res.status(500).json({
+      message: "Cannot connect because DB failed"
+    })
+  }
 });
 
 productRouter.get("/:productId", async(req, res) => {
